@@ -1,11 +1,14 @@
 # ================================
-# 最终版 - OpenAI 强锁定 + 智能筛选版
+# Box / Mihomo 懒人配置模板（公开版）
+# 无订阅信息 | 开箱即用 | OpenAI强锁定
+# 使用方法：
+# 👉 将 proxy-providers 中 url 替换为你的订阅链接
 # ================================
 
 proxy-providers:
-  良心云:
+  订阅1:
     type: http
-    url: "https://liangxin.xyz/api/v1/liangxin?OwO=8dadaedfd0e238184acd41dae296b28d"
+    url: "填写你的订阅链接"
     path: ./proxy_provider/proxy1.yaml
     interval: 86400
     health-check:
@@ -13,9 +16,9 @@ proxy-providers:
       url: https://cp.cloudflare.com/generate_204
       interval: 300
 
-  桃花:
+  订阅2:
     type: http
-    url: "https://x.taohua.sbs/api/v1/client/subscribe?token=d555712841efdbed546d882c8681f98e&flag=meta"
+    url: "填写你的订阅链接"
     path: ./proxy_provider/proxy2.yaml
     interval: 86400
     health-check:
@@ -23,9 +26,9 @@ proxy-providers:
       url: https://cp.cloudflare.com/generate_204
       interval: 300
 
-  随心飞:
+  订阅3:
     type: http
-    url: "https://sub.suixinfly.com/api/v1/client/subscribe?token=df774354cce89dff597dd73bc7adb1cc"
+    url: "填写你的订阅链接"
     path: ./proxy_provider/proxy3.yaml
     interval: 86400
     health-check:
@@ -33,9 +36,9 @@ proxy-providers:
       url: https://cp.cloudflare.com/generate_204
       interval: 300
 
-  阿飞:
+  订阅4:
     type: http
-    url: "https://afeisubscription.18934569.xyz/api/v1/client/subscribe?token=060add8c21708ae8d5d6a86f5eb51295"
+    url: "填写你的订阅链接"
     path: ./proxy_provider/proxy4.yaml
     interval: 86400
     health-check:
@@ -50,8 +53,30 @@ redir-port: 9797
 tproxy-port: 9898
 
 mode: Rule
+bind-address: "*"
+ipv6: true
 allow-lan: true
+unified-delay: true
+tcp-concurrent: true
 log-level: error
+find-process-mode: always
+
+external-controller: 0.0.0.0:9090
+external-ui: ./dashboard
+
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  nameserver:
+    - 223.5.5.5
+    - 1.1.1.1
+    - 8.8.8.8
 
 proxies:
   - {name: DNS_Hijack, type: dns}
@@ -70,23 +95,33 @@ proxy-groups:
     url: https://cp.cloudflare.com/generate_204
     interval: 300
 
-  # OpenAI 智能筛选节点（只选优质节点）
-  - name: OpenAI候选
+  - name: 日本节点
     type: url-test
     include-all: true
-    filter: "(?i)(日本|jp|japan|东京|osaka).*(高速|BGP|流媒体)"
-    url: https://chatgpt.com
-    interval: 300
-    tolerance: 50
+    filter: "(?i)(日本|jp|japan|tokyo|osaka)"
+    url: https://cp.cloudflare.com/generate_204
 
-  # OpenAI 强锁定
+  - name: 香港节点
+    type: url-test
+    include-all: true
+    filter: "(?i)(香港|hk|hong kong)"
+
+  - name: 美国节点
+    type: url-test
+    include-all: true
+    filter: "(?i)(美国|us|usa|america)"
+
+  - name: 全部节点
+    type: select
+    include-all: true
+
+  # OpenAI 强锁定模板
   - name: OpenAI专用
     type: fallback
     proxies:
-      - 日本高速01|BGP|流媒体
-      - 日本高速02|BGP|流媒体
-      - 日本高速03|BGP|流媒体
-      - OpenAI候选
+      - 在这里填你的主节点
+      - 在这里填你的备用节点1
+      - 在这里填你的备用节点2
     url: https://chatgpt.com
     interval: 300
 
@@ -103,11 +138,21 @@ proxy-groups:
       - 自动选择
       - 故障转移
 
+  - name: 国内直连
+    type: select
+    proxies:
+      - DIRECT
+
+  - name: 漏网之鱼
+    type: select
+    proxies:
+      - 国外代理
+      - 国内直连
+
 rules:
   - DST-PORT,53,DNS_Hijack
 
   - DOMAIN-SUFFIX,chatgpt.com,OpenAI
   - DOMAIN-SUFFIX,openai.com,OpenAI
-  - DOMAIN-SUFFIX,api.openai.com,OpenAI
 
   - MATCH,国外代理
